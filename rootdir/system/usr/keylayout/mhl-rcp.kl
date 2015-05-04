@@ -1,8 +1,11 @@
-key 28    DPAD_CENTER
-key 103   DPAD_UP
-key 105   DPAD_LEFT
-key 106   DPAD_RIGHT
-key 108   DPAD_DOWN
+# Copyright (C) 2013 Sony Mobile Communications AB.
+# All rights, including trade secret rights, reserved.
+
+key 28    VENDOR_TV_CENTER
+key 103   VENDOR_TV_UP
+key 105   VENDOR_TV_LEFT
+key 106   VENDOR_TV_RIGHT
+key 108   VENDOR_TV_DOWN
 
 
 key 119   MEDIA_PLAY_PAUSE

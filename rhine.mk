@@ -12,28 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-$(call inherit-product, $(SRC_TARGET_DIR)/product/languages_full.mk)
-
-# qcom common
-$(call inherit-product, device/sony/qcom-common/qcom-common-330.mk)
+# inherit from msm8974-common
+$(call inherit-product, device/sony/msm8974-common/msm8974.mk)
 
 COMMON_PATH := device/sony/rhine-common
 
-DEVICE_PACKAGE_OVERLAYS += $(COMMON_PATH)/overlay
-
-ifneq ($(BOARD_HAVE_RADIO),false)
-    DEVICE_PACKAGE_OVERLAYS += $(COMMON_PATH)/overlay-radio
-    $(call inherit-product, $(COMMON_PATH)/radio.mk)
-endif
+#DEVICE_PACKAGE_OVERLAYS += $(COMMON_PATH)/overlay
 
 # Permissions
 PRODUCT_COPY_FILES += \
+    external/ant-wireless/antradio-library/com.dsi.ant.antradio_library.xml:system/etc/permissions/com.dsi.ant.antradio_library.xml \
     frameworks/native/data/etc/android.hardware.audio.low_latency.xml:system/etc/permissions/android.hardware.audio.low_latency.xml \
     frameworks/native/data/etc/android.hardware.camera.front.xml:system/etc/permissions/android.hardware.camera.front.xml \
     frameworks/native/data/etc/android.hardware.location.gps.xml:system/etc/permissions/android.hardware.location.gps.xml \
     frameworks/native/data/etc/android.hardware.nfc.xml:system/etc/permissions/android.hardware.nfc.xml \
     frameworks/native/data/etc/android.hardware.sensor.gyroscope.xml:system/etc/permissions/android.hardware.sensor.gyroscope.xml \
     frameworks/native/data/etc/android.hardware.sensor.light.xml:system/etc/permissions/android.hardware.sensor.light.xml \
+    frameworks/native/data/etc/android.hardware.sensor.stepcounter.xml:system/etc/permissions/android.hardware.sensor.stepcounter.xml \
+    frameworks/native/data/etc/android.hardware.sensor.stepdetector.xml:system/etc/permissions/android.hardware.sensor.stepdetector.xml \
     frameworks/native/data/etc/android.hardware.touchscreen.multitouch.jazzhand.xml:system/etc/permissions/android.hardware.touchscreen.multitouch.jazzhand.xml \
     frameworks/native/data/etc/android.hardware.usb.accessory.xml:system/etc/permissions/android.hardware.usb.accessory.xml \
     frameworks/native/data/etc/android.hardware.usb.host.xml:system/etc/permissions/android.hardware.usb.host.xml \
@@ -43,35 +39,75 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/com.android.nfc_extras.xml:system/etc/permissions/com.google.android.nfc_extras.xml \
     frameworks/native/data/etc/android.hardware.bluetooth_le.xml:system/etc/permissions/android.hardware.bluetooth_le.xml
 
-# GPS
-PRODUCT_COPY_FILES += \
-    $(COMMON_PATH)/rootdir/system/etc/gps.conf:system/etc/gps.conf \
-    $(COMMON_PATH)/rootdir/system/etc/sec_config:system/etc/sec_config
-
-# WPA supplicant config
-PRODUCT_COPY_FILES += \
-    $(COMMON_PATH)/rootdir/system/etc/wifi/wpa_supplicant_overlay.conf:system/etc/wifi/wpa_supplicant_overlay.conf \
-    $(COMMON_PATH)/rootdir/system/etc/wifi/p2p_supplicant_overlay.conf:system/etc/wifi/p2p_supplicant_overlay.conf
-
+# Init
 PRODUCT_COPY_FILES += \
     $(COMMON_PATH)/rootdir/fstab.qcom:root/fstab.qcom \
-    $(COMMON_PATH)/rootdir/fstab.qcom:recovery/root/fstab.qcom
+    $(COMMON_PATH)/rootdir/init.qcom.rc:root/init.qcom.rc \
+    $(COMMON_PATH)/rootdir/init.recovery.qcom.rc:root/init.recovery.qcom.rc \
+    $(COMMON_PATH)/rootdir/system/etc/init.qcom.bt.sh:system/etc/init.qcom.bt.sh \
+    $(COMMON_PATH)/rootdir/ueventd.qcom.rc:root/ueventd.qcom.rc
 
-# Prima wifi config
-PRODUCT_COPY_FILES += \
-    $(COMMON_PATH)/rootdir/system/etc/init.qcom.wifi.sh:system/etc/init.qcom.wifi.sh \
-    $(COMMON_PATH)/rootdir/system/etc/firmware/wlan/prima/WCNSS_qcom_cfg.ini:system/etc/firmware/wlan/prima/WCNSS_qcom_cfg.ini
-
-# QCOM Display
+# Recovery
 PRODUCT_PACKAGES += \
-    hwcomposer.msm8974 \
-    gralloc.msm8974 \
-    copybit.msm8974
+    extract_elf_ramdisk
 
-PRODUCT_PROPERTY_OVERRIDES += \
-    persist.gralloc.cp.level3=1
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/recovery/c6x02.sh:c6x02.sh
 
-# NFC Support
+# Sbin
+PRODUCT_COPY_FILES += \
+    $(COMMON_PATH)/rootdir/sbin/tad_static:system/bin/tad_static
+
+# ANT+
+PRODUCT_PACKAGES += \
+    AntHalService \
+    com.dsi.ant.antradio_library \
+    libantradio
+
+# Audio configuration
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/audio/audio_policy.conf:system/etc/audio_policy.conf
+
+# Filesystem management tools
+PRODUCT_PACKAGES += \
+    e2fsck
+
+# FM Radio
+PRODUCT_COPY_FILES += \
+    $(COMMON_PATH)/rootdir/system/etc/init.qcom.fm.sh:system/etc/init.qcom.fm.sh
+
+PRODUCT_PACKAGES += \
+    qcom.fmradio \
+    libqcomfm_jni \
+    FM2 \
+    FMRecord
+
+# GPS
+PRODUCT_COPY_FILES += \
+    $(COMMON_PATH)/gps/flp.conf:system/etc/flp.conf \
+    $(COMMON_PATH)/gps/gps.conf:system/etc/gps.conf \
+    $(COMMON_PATH)/gps/izat.conf:system/etc/izat.conf \
+    $(COMMON_PATH)/gps/sap.conf:system/etc/sap.conf
+
+PRODUCT_PACKAGES += \
+    com.qualcomm.location \
+    gps.msm8974
+
+# IPC Security Config
+PRODUCT_COPY_FILES += \
+    $(COMMON_PATH)/rootdir/system/etc/sec_config:system/etc/sec_config
+
+# Keystore
+PRODUCT_PACKAGES += \
+    keystore.msm8974
+
+# Keylayout
+PRODUCT_COPY_FILES += \
+    $(COMMON_PATH)/rootdir/system/usr/keylayout/gpio-keys.kl:system/usr/keylayout/gpio-keys.kl \
+    $(COMMON_PATH)/rootdir/system/usr/keylayout/mhl-rcp.kl:system/usr/keylayout/mhl-rcp.kl \
+    $(COMMON_PATH)/rootdir/system/usr/keylayout/msm8974-taiko-mtp-snd-card_Button_Jack.kl:system/usr/keylayout/msm8974-taiko-mtp-snd-card_Button_Jack.kl
+
+# NFC
 PRODUCT_PACKAGES += \
     libnfc \
     libnfc_jni \
@@ -92,134 +128,111 @@ endif
 PRODUCT_COPY_FILES += \
     $(NFCEE_ACCESS_PATH):system/etc/nfcee_access.xml
 
-# Recovery
+# Off mode charger
 PRODUCT_PACKAGES += \
-    extract_elf_ramdisk
+    charger_res_images
 
-# Audio
+# USB
 PRODUCT_PACKAGES += \
-    audio_policy.msm8974 \
-    audio.primary.msm8974 \
-    audio.a2dp.default \
-    audio.usb.default \
-    audio.r_submix.default \
-    libaudio-resampler \
-    tinymix
-
-# BT
-PRODUCT_PACKAGES += \
-    hci_qcomm_init
-
-# Media
-PRODUCT_COPY_FILES += \
-    $(COMMON_PATH)/rootdir/system/etc/media_profiles.xml:system/etc/media_profiles.xml
-
-# WIFI MAC update
-PRODUCT_PACKAGES += \
-    mac-update
-
-# FM Radio
-PRODUCT_COPY_FILES += \
-    $(COMMON_PATH)/rootdir/system/etc/init.qcom.fm.sh:system/etc/init.qcom.fm.sh
-
-# Key layouts
-PRODUCT_COPY_FILES += \
-    $(COMMON_PATH)/rootdir/system/usr/keylayout/Button_Jack.kl:system/usr/keylayout/Button_Jack.kl \
-    $(COMMON_PATH)/rootdir/system/usr/keylayout/gpio-keys.kl:system/usr/keylayout/gpio-keys.kl \
-    $(COMMON_PATH)/rootdir/system/usr/keylayout/mhl-rcp.kl:system/usr/keylayout/mhl-rcp.kl
-
-# Misc
-PRODUCT_PACKAGES += \
-    librs_jni \
     com.android.future.usb.accessory
 
-# Live Wallpapers
+# WiFi
 PRODUCT_PACKAGES += \
-    LiveWallpapers \
-    LiveWallpapersPicker \
-    VisualizationWallpapers \
+    libQWiFiSoftApCfg \
+    libqsap_sdk \
+    mac-update \
+    wcnss_service
 
-# Filesystem management tools
-PRODUCT_PACKAGES += \
-    e2fsck
+PRODUCT_PROPERTY_OVERRIDES += \
+    wlan.driver.ath=0
 
-# We have enough storage space to hold precise GC data
-PRODUCT_TAGS += dalvik.gc.type-precise
-
-# Custom init / uevent
 PRODUCT_COPY_FILES += \
-    $(COMMON_PATH)/rootdir/init.qcom.rc:root/init.qcom.rc \
-    $(COMMON_PATH)/rootdir/ueventd.qcom.rc:root/ueventd.qcom.rc \
-    $(COMMON_PATH)/rootdir/init.recovery.qcom.rc:root/init.recovery.qcom.rc \
-    $(COMMON_PATH)/rootdir/system/etc/init.qcom.bt.sh:system/etc/init.qcom.bt.sh
+    $(COMMON_PATH)/rootdir/system/etc/wifi/wpa_supplicant_overlay.conf:system/etc/wifi/wpa_supplicant_overlay.conf \
+    $(COMMON_PATH)/rootdir/system/etc/wifi/p2p_supplicant_overlay.conf:system/etc/wifi/p2p_supplicant_overlay.conf
 
-# Post recovery script
 PRODUCT_COPY_FILES += \
-    $(COMMON_PATH)/recovery/postrecoveryboot.sh:recovery/root/sbin/postrecoveryboot.sh
-
-# Additional sbin stuff
-PRODUCT_COPY_FILES += \
-    $(COMMON_PATH)/rootdir/charger:root/charger \
-    $(COMMON_PATH)/rootdir/sbin/wait4tad_static:root/sbin/wait4tad_static \
-    $(COMMON_PATH)/rootdir/sbin/tad_static:root/sbin/tad_static
-
-# Thermal monitor configuration
-PRODUCT_COPY_FILES += \
-    $(COMMON_PATH)/rootdir/system/etc/thermald.conf:system/etc/thermald.conf
+    $(COMMON_PATH)/rootdir/system/etc/init.qcom.wifi.sh:system/etc/init.qcom.wifi.sh \
+    $(COMMON_PATH)/rootdir/system/etc/firmware/wlan/prima/WCNSS_cfg.dat:system/etc/firmware/wlan/prima/WCNSS_cfg.dat \
+    $(COMMON_PATH)/rootdir/system/etc/firmware/wlan/prima/WCNSS_qcom_cfg.ini:system/etc/firmware/wlan/prima/WCNSS_qcom_cfg.ini \
+    $(COMMON_PATH)/rootdir/system/etc/firmware/wlan/prima/WCNSS_qcom_wlan_nv.bin:system/etc/firmware/wlan/prima/WCNSS_qcom_wlan_nv.bin \
+    $(COMMON_PATH)/rootdir/system/etc/hostapd/hostapd_default.conf:system/etc/hostapd/hostapd_default.conf
 
 # Set default USB interface
 PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
     persist.sys.usb.config=mtp
 
-# GPS
+# Audio offload
 PRODUCT_PROPERTY_OVERRIDES += \
-    persist.gps.qc_nlp_in_use=0
+    audio.offload.buffer.size.kb=32 \
+    audio.offload.gapless.enabled=false \
+    audio.offload.multiple.enabled=false \
+    audio.offload.pcm.enable=enable \
+    av.offload.enable=enable \
+    av.streaming.offload.enable=enable
 
-# Audio
+# Enable AAC 5.1 output
 PRODUCT_PROPERTY_OVERRIDES += \
-    persist.audio.handset.mic=analog \
-    persist.audio.hp=true \
+    media.aac_51_output_enabled=true
+
+# Voice Call
+PRODUCT_PROPERTY_OVERRIDES += \
     ro.qc.sdk.audio.fluencetype=none \
-    persist.speaker.prot.enable=false \
-    lpa.decode=false \
-    lpa.use-stagefright=true \
-    tunnel.decode=false \
-    tunnel.audiovideo.decode=false \
-    tunnel.multiple=false
+    persist.audio.dualmic.config=endfire \
+    persist.audio.fluence.voicecall=true \
+    persist.audio.fluence.voicerec=false \
+    persist.audio.fluence.speaker=true
 
 # aDSP
 PRODUCT_PROPERTY_OVERRIDES += \
-    ro.qualcomm.sensors.qmd=false \
+    ro.qualcomm.sensors.qmd=true \
     debug.qualcomm.sns.hal=w \
     ro.qc.sdk.sensors.gestures=false \
     ro.qc.sensors.max_accel_rate=false \
     ro.qc.sensors.max_gyro_rate=false \
     ro.qc.sensors.max_mag_rate=false \
+    ro.qc.sensors.smgr_mag_cal_en=true \
     ro.qualcomm.sensors.pedometer=false \
+    ro.qc.sensors.step_counter=true \
+    ro.qc.sensors.step_detector=true \
     ro.qualcomm.sensors.pam=false \
-    ro.qualcomm.sensors.scrn_ortn=false
+    ro.qualcomm.sensors.scrn_ortn=false \
+    ro.qualcomm.sensors.georv=true \
+    ro.qualcomm.sensors.smd=sony
+
+# Bluetooth
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.qualcomm.bt.hci_transport=smd
+
+# GPS
+PRODUCT_PROPERTY_OVERRIDES += \
+    persist.gps.qc_nlp_in_use=0 \
+    ro.gps.agps_provider=1 \
+    ro.qc.sdk.izat.premium_enabled=1 \
+    ro.qc.sdk.izat.service_mask=0x0
+
+# HDMI
+PRODUCT_PROPERTY_OVERRIDES += \
+    persist.demo.hdmirotationlock=false
+
+# MDP
+PRODUCT_PROPERTY_OVERRIDES += \
+    debug.mdpcomp.logs=0
+
+# Time
+PRODUCT_PROPERTY_OVERRIDES += \
+    persist.timed.enable=true
+
+# Touchscreen
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.input.noresample=1
 
 # WFD
 PRODUCT_PROPERTY_OVERRIDES += \
     persist.debug.wfd.enable=1 \
     persist.sys.wfd.virtual=0
 
-# HDMI
-PRODUCT_PROPERTY_OVERRIDES += \
-    persist.demo.hdmirotationlock=false
-
-# Time
-PRODUCT_PROPERTY_OVERRIDES += \
-    persist.timed.enable=true
-
-# VIDC debug_levels
-# 1:ERROR 2:HIGH 4:LOW 0:NOLOGS 7:AllLOGS
-PRODUCT_PROPERTY_OVERRIDES += \
-    vidc.debug.level=1
-
-# Bluetooth
-PRODUCT_PROPERTY_OVERRIDES += \
-    ro.qualcomm.bt.hci_transport=smd
+# HWUI memory limits
+$(call inherit-product, frameworks/native/build/phone-xxhdpi-2048-hwui-memory.mk)
 
 # Include non-opensource parts
 $(call inherit-product, vendor/sony/rhine-common/rhine-common-vendor.mk)
